@@ -1,0 +1,51 @@
+class HashTable:
+    def __init__(self, size=128):
+        self.size = size
+        self.buckets = [[] for _ in range(size)]
+        self.count = 0  # Track the number of elements
+
+    def _hash(self, key):
+        return hash(key) % self.size
+
+    def get(self, key):
+        bucket_index = self._hash(key)
+        bucket = self.buckets[bucket_index]
+        for k, v in bucket:
+            if k == key:
+                return v
+        return None
+
+    def set(self, key, value):
+        if self.count / self.size > 0.7:  # Resize when load factor > 0.7
+            self._resize()
+        bucket_index = self._hash(key)
+        bucket = self.buckets[bucket_index]
+        for idx, (k, _) in enumerate(bucket):
+            if k == key:
+                bucket[idx] = (key, value)
+                return
+        bucket.append((key, value))
+        self.count += 1
+
+    def delete(self, key):
+        bucket_index = self._hash(key)
+        bucket = self.buckets[bucket_index]
+        for idx, (k, _) in enumerate(bucket):
+            if k == key:
+                del bucket[idx]
+                self.count -= 1
+                return True
+        return False
+
+    def _resize(self):
+        new_size = self.size * 2
+        new_buckets = [[] for _ in range(new_size)]
+        for bucket in self.buckets:
+            for key, value in bucket:
+                new_bucket_index = hash(key) % new_size
+                new_buckets[new_bucket_index].append((key, value))
+        self.size = new_size
+        self.buckets = new_buckets
+
+    def __repr__(self):
+        return "{" + ", ".join(f"{k}: {v}" for bucket in self.buckets for k, v in bucket) + "}"
